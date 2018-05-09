@@ -2,9 +2,9 @@
   <div class="container" @click="clickHandle('test click', $event)">
 
     <div class="userinfo" @click="bindViewTap">
-      <img class="userinfo-avatar" v-if="userInfo.avatarUrl" :src="userInfo.avatarUrl" background-size="cover" />
+      <img class="userinfo-avatar" v-if="userProfile.avatar" :src="userProfile.avatar" background-size="cover" />
       <div class="userinfo-nickname">
-        <card :text="userInfo.nickName"></card>
+        <card :text="userProfile.name"></card>
       </div>
     </div>
 
@@ -23,8 +23,8 @@
 </template>
 
 <script>
+import { mapState, mapActions } from 'vuex';
 import card from '@/components/card';
-import { getUserProfile } from '@/api/user';
 
 export default {
   data() {
@@ -33,40 +33,25 @@ export default {
       userInfo: {},
     };
   },
-
   components: {
     card,
   },
-
+  computed: {
+    ...mapState(['userProfile']),
+  },
   methods: {
+    ...mapActions(['getUserProfile']),
     bindViewTap() {
       const url = '../logs/main';
       wx.navigateTo({ url });
-    },
-    getUserInfo() {
-      // 调用登录接口
-      // wx.login({
-      //   success: () => {
-      //     wx.getUserInfo({
-      //       success: (res) => {
-      //         this.userInfo = res.userInfo;
-      //       },
-      //     });
-      //   },
-      // });
     },
     clickHandle(msg, ev) {
       console.log('clickHandle:', msg, ev);
     },
   },
 
-  created() {
-    console.log(1);
-    // 调用应用实例的方法获取全局数据
-    // this.getUserInfo();
-  },
   mounted() {
-    getUserProfile();
+    this.getUserProfile();
   },
 
 };
@@ -80,9 +65,9 @@ export default {
 }
 
 .userinfo-avatar {
-  width: 128rpx;
-  height: 128rpx;
-  margin: 20rpx;
+  width: 64rpx;
+  height: 64rpx;
+  margin: 10rpx;
   border-radius: 50%;
 }
 
