@@ -174,7 +174,7 @@ class Http {
 /**
  * @var {string} api基址
  */
-export const BASE_URL = 'http://api.test.chaping.io/api';
+export const BASE_URL = 'https://api.test.chaping.io/api';
 
 /**
  * @var {object} interceptors

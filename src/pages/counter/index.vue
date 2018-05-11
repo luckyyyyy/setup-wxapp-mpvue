@@ -7,22 +7,31 @@
     </p>
     <p @click="to">123</p>
     <a href="/pages/index/index" class="home">去往首页</a>
+    <button @getuserinfo="hello" open-type="getUserInfo">点击登陆</button>
   </div>
 </template>
 
 <script>
 
+import { mapState } from 'vuex';
 
 export default {
   computed: {
     count() {
       return this.$store.state.count;
     },
+    ...mapState(['auth']),
+  },
+  onUnload() {
+    this.auth.reject();
+    console.log('onUnload');
+  },
+  destroyed() {
+    console.log('destroyed');
   },
   methods: {
     to() {
       this.$router.push({ path: '/pages/index/index' });
-      console.log(555);
     },
     increment() {
       this.$store.commit('increment');
@@ -30,9 +39,10 @@ export default {
     decrement() {
       this.$store.commit('decrement');
     },
-  },
-  mounted() {
-    console.log(2);
+    hello(cb) {
+      this.auth.resolve(cb);
+      this.$router.back();
+    },
   },
 };
 

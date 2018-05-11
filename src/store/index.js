@@ -15,6 +15,10 @@ const store = new Vuex.Store({
   state: {
     count: 0,
     userProfile: {},
+    auth: {
+      reject: null,
+      resolve: null,
+    },
   },
   actions: {
     getUserProfile: ({ commit }) => {
@@ -39,6 +43,9 @@ const store = new Vuex.Store({
     decrement: (state) => {
       const obj = state;
       obj.count -= 1;
+    },
+    auth: (state, auth) => {
+      state.auth = auth;
     },
   },
 });

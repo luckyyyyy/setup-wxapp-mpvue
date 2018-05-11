@@ -6,6 +6,7 @@
 /* eslint-disable no-await-in-loop */
 import WXP from 'minapp-api-promise';
 import { http } from '@/api';
+import Vue from 'vue';
 
 export const clearAuthorization = () => WXP.removeStorageSync('tokens');
 export const getAuthorization = () => WXP.getStorageSync('tokens');
@@ -29,6 +30,7 @@ export const getToken = (code, iv, encryptedData) => {
   }, { ignoreToken: true });
 };
 
+
 /**
  * 获取用户授权 assert
  * @return {Promise}
@@ -41,7 +43,7 @@ export const getUserInfo = () => {
         try {
           const data = await WXP.login();
           const set = await WXP.getSetting();
-          if (set.authSetting['scope.userInfo'] === false) {
+          if (!set.authSetting['scope.userInfo'] || set.authSetting['scope.userInfo'] === false) {
             throw Error('scope userInfo disabled');
           }
           const user = await WXP.getUserInfo({
@@ -54,15 +56,26 @@ export const getUserInfo = () => {
           resolve();
         } catch (e) {
           const set = await WXP.getSetting();
-          if (set.authSetting['scope.userInfo'] === false) {
-            await WXP.showModal({
-              title: '需要授权',
-              content: '请允许授权用户基础信息',
-              showCancel: false,
+          if (!set.authSetting['scope.userInfo'] || set.authSetting['scope.userInfo'] === false) {
+            let _resolve = null;
+            let _reject = null;
+            const userAuth = new Promise((authResolve, authReject) => {
+              _resolve = authResolve;
+              _reject = authReject;
             });
-            await WXP.openSetting();
+            const router = Vue.prototype.$router;
+            const store = router.app.$store;
+            store.commit('auth', {
+              resolve: _resolve,
+              reject: _reject,
+            });
+            router.push('/pages/counter/index');
+            try {
+              await userAuth;
+            } catch (ea) {
+              console.log(333);
+            }
           }
-          // @todo 换 token 的时候出现了错误需要处理
         }
       }
     });

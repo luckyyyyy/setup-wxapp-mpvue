@@ -51,6 +51,7 @@ export default {
   },
 
   mounted() {
+    console.log('index');
     this.getUserProfile();
   },
 
