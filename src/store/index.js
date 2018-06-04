@@ -15,9 +15,9 @@ const store = new Vuex.Store({
   state: {
     count: 0,
     userProfile: {},
-    auth: {
-      reject: null,
+    access: {
       resolve: null,
+      reject: null,
     },
   },
   actions: {
@@ -44,8 +44,9 @@ const store = new Vuex.Store({
       const obj = state;
       obj.count -= 1;
     },
-    auth: (state, auth) => {
-      state.auth = auth;
+    SET_ACCESS(state, { reject, resolve }) {
+      state.access.reject = reject;
+      state.access.resolve = resolve;
     },
   },
 });

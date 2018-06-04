@@ -5,8 +5,8 @@
  */
 /* eslint-disable no-await-in-loop */
 import WXP from 'minapp-api-promise';
-import { http } from '@/api';
 import Vue from 'vue';
+import { http } from '@/api';
 
 export const clearAuthorization = () => WXP.removeStorageSync('tokens');
 export const getAuthorization = () => WXP.getStorageSync('tokens');
@@ -19,7 +19,7 @@ export const setAuthorization = token => WXP.setStorageSync('tokens', token);
  * @param {string} encryptedData 加密后的敏感数据，同上
  * @return {Promise}
  */
-export const getToken = (code, iv, encryptedData) => {
+export const getToken = (code, iv = null, encryptedData = null) => {
   return http.post('user/token', {
     wxapp: {
       scenario: 'zhongce_wxapp',
@@ -30,52 +30,61 @@ export const getToken = (code, iv, encryptedData) => {
   }, { ignoreToken: true });
 };
 
-
 /**
  * 获取用户授权 assert
  * @return {Promise}
  */
 let _getUserInfo = null;
+let _tryBasicLogin = true;
+
 export const getUserInfo = () => {
   if (!_getUserInfo) {
     _getUserInfo = new Promise(async (resolve, reject) => {
       while (!getAuthorization()) {
         try {
           const data = await WXP.login();
-          const set = await WXP.getSetting();
-          if (!set.authSetting['scope.userInfo'] || set.authSetting['scope.userInfo'] === false) {
-            throw Error('scope userInfo disabled');
+          let res;
+          /**
+           * try basic login
+           * code2session => openid & unionid
+           */
+          try {
+            if (_tryBasicLogin) {
+              res = await getToken(data.code);
+            } else {
+              _tryBasicLogin = false;
+              throw Error('try user info');
+            }
+          } catch (e) {
+            const set = await WXP.getSetting();
+            // check user info scope
+            if (!set.authSetting['scope.userInfo']) {
+              throw Error('scope userInfo disabled');
+            }
+            const user = await WXP.getUserInfo({
+              withCredentials: true,
+              lang: 'zh_CN',
+            });
+            res = await getToken(data.code, user.iv, user.encryptedData);
           }
-          const user = await WXP.getUserInfo({
-            withCredentials: true,
-            lang: 'zh_CN',
-          });
-          const res = await getToken(data.code, user.iv, user.encryptedData);
           await setAuthorization(res.data.access_token);
           _getUserInfo = null;
           resolve();
         } catch (e) {
           const set = await WXP.getSetting();
-          if (!set.authSetting['scope.userInfo'] || set.authSetting['scope.userInfo'] === false) {
-            let _resolve = null;
-            let _reject = null;
-            const userAuth = new Promise((authResolve, authReject) => {
-              _resolve = authResolve;
-              _reject = authReject;
-            });
-            const router = Vue.prototype.$router;
-            const store = router.app.$store;
-            store.commit('auth', {
-              resolve: _resolve,
-              reject: _reject,
-            });
-            router.push('/pages/counter/index');
+          const router = Vue.prototype.$router;
+          const store = Vue.prototype.$store;
+          if (!set.authSetting['scope.userInfo']) {
+            router.push('/pages/login/index');
             try {
-              await userAuth;
-            } catch (ea) {
-              console.log(333);
+              await new Promise((res, rej) => {
+                store.commit('SET_ACCESS', { res, rej });
+              });
+            } catch (err) {
+              break;
             }
           }
+          // @todo 换 token 的时候出现了错误需要处理
         }
       }
     });

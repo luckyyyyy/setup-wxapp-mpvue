@@ -18,6 +18,8 @@ const app = new Vue({
 });
 app.$mount();
 
+Vue.prototype.$store = store;
+
 export default {
   // 这个字段走 app.json
   config: {

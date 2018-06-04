@@ -20,10 +20,10 @@ export default {
     count() {
       return this.$store.state.count;
     },
-    ...mapState(['auth']),
+    ...mapState(['access']),
   },
   onUnload() {
-    this.auth.reject();
+    this.access.reject();
     console.log('onUnload');
   },
   destroyed() {
@@ -40,7 +40,7 @@ export default {
       this.$store.commit('decrement');
     },
     hello(cb) {
-      this.auth.resolve(cb);
+      this.access.resolve(cb);
       this.$router.back();
     },
   },
